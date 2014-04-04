@@ -1,16 +1,31 @@
 #! /usr/bin/env python
 #copyright Simon Gravel, McGill University
 #
-#This is a bare bones version--if you would like to add features, let me know! 
+#This is a bare bones version--if you would like to develop or suggest additional features, let me know! 
 #
-
+#this script calls an external LP solver. Currently, only Gurobi is supported. It is proprietary software, but has free academic licenses. 
+#http://www.gurobi.com/products/licensing-and-pricing/academic-licensing
+#If that doesn't work for you, contact me. I have a freestanding version in Mathematica, and could be talked into developing link to other solvers.
+#
 #this python script loads in a site-frequency spectrum, and calculates the predicted number of nonreference or segregating sites to be discivered if a total of n samples are sequenced, using linear programming.
+#
+#example usage
+#python lp.py samplesfs.txt -n 200,400 -b 15 -B 100 -s gurobi -o samplesfs.lp
+#general usage
+#lp.py file.txt -n totalsamples -b bins -B bootstraps -s solver [-o outputfile: default file.lp] 
+# file.txt should be a site-frequency spectrum, a tab-delimited file showing the number of variants observed 0, 1, 2, ... , k times. We assume that the first and last bins of the SFS are fixed sites. The actual values in these bins are not used. 
+#Only the bins 2, 3,...,b+1 are used. If there is no LP solution, b is reduced until a solution is found 
+#totalsamples should be a list of comma separated ints that represent the target sizes. 
+#solver is an external lp solver that python knows where to find. Currently only gurobi is implemented. 
+
+
+
 
 import sys
 import numpy
 from scipy.special import gammaln
 from pulp import *
-usage="lp.py file.txt -n totalsamples -b bins -B bootstraps -s solver [-o outputfile: default file.lp]  \n file.txt should be a site-frequency spectrum, a tab-delimited file showing the number of variants observed 0, 1, 2, ... , k times. Only the bins 2, 3,...,b+1 are used.\n totalsamples should be a list of comma separated ints that represent the target sizes. We assume that the first and last bins of the SFS are fixed sites. The actual values in these bins is not usedsolver is an external lp solver that python knows where to find. Currently only gurobi is implemented. Example usage ./lp.py samplesfs.txt -n 200,400 -B 100 -s gurobi -o samplesfs.lp"
+usage="lp.py file.txt -n totalsamples -b bins -B bootstraps -s solver [-o outputfile: default file.lp]  \n file.txt should be a site-frequency spectrum, a tab-delimited file showing the number of variants observed 0, 1, 2, ... , k times. Only the bins 2, 3,...,b+1 are used. If there is no LP solution, b is reduced until a solution is found \n totalsamples should be a list of comma separated ints that represent the target sizes. We assume that the first and last bins of the SFS are fixed sites. The actual values in these bins is not usedsolver is an external lp solver that python knows where to find. Currently only gurobi is implemented. Example usage python lp.py samplesfs.txt -n 200,400 -b 15 -B 100 -s gurobi -o samplesfs.lp"
 
 args=sys.argv
 
@@ -245,10 +260,9 @@ fp.write("observed, min, max, number of bins used\n")
 for N in Ns:
 	point, boots=extrapolate(sfs, N, startcut, nboot, 0)
 	print "estimate obtained"
-	boots2=numpy.array([numpy.array(boot)*point[0]/boot[0] for boot in boots]) #normalize so that the initial number is the actual initial number observed. 
-	#print boots, boots2
+	bootsnorm=numpy.array([numpy.array(boot)*point[0]/boot[0] for boot in boots]) #normalize so that the initial number is the actual initial number observed. 
 	
-	CIs=numpy.percentile(boots2,[2.5,50,97.5],axis=0)
+	CIs=numpy.percentile(bootsnorm,[2.5,50,97.5],axis=0)
 
 
 	print CIs
@@ -257,7 +271,7 @@ for N in Ns:
 	print point
 	fp.write("\t".join(map(lambda i:"%f" % (i,), point))+"\n")
 	fp.write("bootstrap, N=%d\n"% N)
-	for boot in boots:
+	for boot in bootsnorm:
 		fp.write("\t".join(map(lambda i:"%f" % (i,), boot))+"\n")
 	fp.write("95% CI, \n")
 	fp.write("\t".join(map(lambda i:"%f" % (i,), CIs[0]))+"\n")
