@@ -10,7 +10,7 @@ import sys
 import numpy
 from scipy.special import gammaln
 from pulp import *
-usage="lp.py file.txt -n totalsamples -b bins -B bootstraps -s solver [-o outputfile: default file.lp]  \n file.txt should be a site-frequency spectrum, a tab-delimited file showing the number of variants observed 0, 1, 2, ... , k times. Only the bins 2, 3,...,b+1 are used.\n totalsamples should be a list of comma separated ints that represent the target sizes. We assume that the first and last bins of the SFS are fixed sites. The actual values in these bins is not usedsolver is an external lp solver that python knows where to find. Currently only gurobi is implemented. Example usage ./jackknife.py CEU.SFS -n 1000,2000,3000 -p 3 -o foo.jk"
+usage="lp.py file.txt -n totalsamples -b bins -B bootstraps -s solver [-o outputfile: default file.lp]  \n file.txt should be a site-frequency spectrum, a tab-delimited file showing the number of variants observed 0, 1, 2, ... , k times. Only the bins 2, 3,...,b+1 are used.\n totalsamples should be a list of comma separated ints that represent the target sizes. We assume that the first and last bins of the SFS are fixed sites. The actual values in these bins is not usedsolver is an external lp solver that python knows where to find. Currently only gurobi is implemented. Example usage ./lp.py samplesfs.txt -n 200,400 -B 100 -s gurobi -o samplesfs.lp"
 
 args=sys.argv
 
@@ -45,11 +45,11 @@ Ns=map(int,Ns)
 startcut=int(args[5])
 nboot=int(args[7])
 solver=args[9]
-if(len(args)==8): 
-	outf=args[7]
+if(len(args)==10): 
+	outf=args[9]
 else:
 	froot='.'.join(args[1].split('.')[:-1])
-	outf=froot+".jk"
+	outf=froot+".lp"
 
 print "found a total of", numpy.sum(sfs), " sites,  including ", numpy.sum(sfs[1:-1]), " segregating, and ", sfs[0], " fixed ref, and " , sfs[-1], "fixed nonref" 
 print "frequency spectrum contains ", len(sfs), "bins, assuming ", len(sfs)-1, " sequenced haploid genomes"	
@@ -60,7 +60,7 @@ if min(Ns)<n:
 	print "One of the extrapolation values is lower than the observed counts! You should be performing a projection rather than an extrapolation! (not yet implemented here)"
 	sys.exit()
 
-#projection matrix. Inspired by similar code in dadi by Gutenkunst. 
+#projection matrix. Inspired by similar code in dadi by Gutenkunst (PLoS genetics, 2009). 
 
 def lncomb(N,k):
     """
@@ -197,7 +197,7 @@ def optimizecut(start,sfs,nmono,extrapto,bchp):
    		
    		if not keeptrying:
 			#print "cut",trycut,"range",value(probmin.objective),"-",value(prob.objective)
-			return obs, value(prob.objective),value(probmin.objective),trycut
+			return obs,value(probmin.objective),value(prob.objective),trycut
 
 	
 
@@ -240,25 +240,31 @@ size:downsampling";
   
 
 
-
-
-
-point, boots=extrapolate(sfs, 200, startcut, nboot, 0)
-
-CIs=numpy.percentile(boots,[2.5,50,97.5],axis=1)
-
-
-
 fp=open(outf,"w")
-fp.write("original estimate: observed, min, max, number of bins used")
-print point
-fp.write("\t".join(map(lambda i:"%f" % (i,), point)))
-fp.write("bootstrap estimates: observed, min, max, number of bins used")
-for boot in boots:
-	fp.write("\t".join(map(lambda i:"%f" % (i,), boot)))
+fp.write("observed, min, max, number of bins used\n")
+for N in Ns:
+	point, boots=extrapolate(sfs, N, startcut, nboot, 0)
+	print "estimate obtained"
+	boots2=numpy.array([numpy.array(boot)*point[0]/boot[0] for boot in boots]) #normalize so that the initial number is the actual initial number observed. 
+	#print boots, boots2
+	
+	CIs=numpy.percentile(boots2,[2.5,50,97.5],axis=0)
 
 
+	print CIs
+	
+	fp.write("N=%d\n" % N)
+	print point
+	fp.write("\t".join(map(lambda i:"%f" % (i,), point))+"\n")
+	fp.write("bootstrap, N=%d\n"% N)
+	for boot in boots:
+		fp.write("\t".join(map(lambda i:"%f" % (i,), boot))+"\n")
+	fp.write("95% CI, \n")
+	fp.write("\t".join(map(lambda i:"%f" % (i,), CIs[0]))+"\n")
+	fp.write("\t".join(map(lambda i:"%f" % (i,), CIs[1]))+"\n")
+	
+
+fp.close()
 
 
-#t,prob,probmin=optimizecut(10,sfs,0,1000)
 
