@@ -1,1 +1,5 @@
 Code to perform linear programming and jackknife extrapolation from allele frequency distributions. c and cpp not yet functional.
+
+The software is free to use for academic purposes. It uses the gurobi optimizer, which is also free for academic users. If you are a commercial user and wish to use this software, contact me. I also have a standalone version available.
+
+
