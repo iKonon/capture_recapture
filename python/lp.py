@@ -7,7 +7,7 @@
 #http://www.gurobi.com/products/licensing-and-pricing/academic-licensing
 #If that doesn't work for you, contact me. I have a freestanding version in Mathematica, and could be talked into developing link to other solvers.
 #
-#this python script loads in a site-frequency spectrum, and calculates the predicted number of nonreference or segregating sites to be discivered if a total of n samples are sequenced, using linear programming.
+#this python script loads in a site-frequency spectrum, and calculates the predicted number of nonreference or segregating sites to be discovered if a total of n samples are sequenced, using linear programming.
 #
 #example usage
 #python lp.py samplesfs.txt -n 200,400 -b 15 -B 100 -s gurobi -o samplesfs.lp
