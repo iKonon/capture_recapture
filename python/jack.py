@@ -71,12 +71,14 @@ for N in Ns:
 	if order==3:
 		n=float(n)
 		missed=(delta*(-127+628*n-1386*n**2+1722*n**3-1269*n**4+546*n**5-126*n**6+12*n**7+(-1+n)*(-10-87*n+310*n**2-372*n**3+210*n**4-57*n**5+6*n**6)*delta+2*(-2+n)**2*(-1+n)**3*(6-5*n+n**2)*delta**2)*sfs[1])/((-1+n)**2*n*(-5+2*n)*(-3+2*n)*(11-12*n+3*n**2))+(delta*(-2*(-248+402*n-61*n**2-249*n**3+195*n**4-57*n**5+6*n**6)-2*(-1+n)*(-560+1130*n-731*n**2+55*n**3+127*n**4-51*n**5+6*n**6)*delta+2*(-1+n)**2*(6-5*n+n**2)*(52-78*n+38*n**2-6*n**3)*delta**2)*sfs[2])/((-1+n)**2*n*(-5+2*n)*(-3+2*n)*(11-12*n+3*n**2))+(delta*(6*(3-2*n)**2*(-3+n)**3+6*(-3+n)**3*(-1+n)*(15-19*n+6*n**2)*delta+6*(-3+n)**2*(-1+n)**2*(-3+2*n)*(6-5*n+n**2)*delta**2)*sfs[3])/((-1+n)**2*n*(-5+2*n)*(-3+2*n)*(11-12*n+3*n**2))
-	print "based on third-order jackknife, ", missed, "variants will be discovered if ", N,"samples are sequenced"	
-	print "total nonreference will be", missed+numpy.sum(sfs[1:])
-	outputs.append(missed+numpy.sum(sfs[1:]))
 	else:
 		print "jackknife order ", o,"not implemented"
 		sys.exit()
+		
+	print "based on %d-order jackknife, " % (order,), missed, "variants will be discovered if ", N,"samples are sequenced"	
+	print "total nonreference will be", missed+numpy.sum(sfs[1:])
+	outputs.append(missed+numpy.sum(sfs[1:]))
+		
 fp=open(outf,'w')		 
 for i,j in zip(Ns,outputs):
 	fp.write("%d\t%f\n"%(i,j))
