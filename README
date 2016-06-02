@@ -1,6 +1,10 @@
-Code to predict the number of variants to be discovered in a large sample based on the distribution of allele frequencies in a subset of the sample. Two methods are included in the python 
+Code to predict the number of variants to be discovered in a large sample based on the distribution of allele frequencies in a subset of the sample. jack.py uses a jackknife approach, while lp.py uses a linear programming approach. Details about the software can be found in my paper  http://www.genetics.org/content/197/2/601.abstract. 
 
-perform linear programming and jackknife extrapolation from allele frequency distributions. c and cpp not yet functional.
+
+Predicting Discovery Rates of Genomic Features
+Simon Gravel, National Heart, Lung, and Blood Institute (NHLBI) GO Exome Sequencing Project GENETICS June 1, 2014 vol. 197 no. 2 601-610; DOI: 10.1534/genetics.114.162149
+
+
 
 This software is released under the BSD-3 license (below). The Linear Programming
 software uses the gurobi optimizer, which is free for academic users. The jackknife program is standalone. 
